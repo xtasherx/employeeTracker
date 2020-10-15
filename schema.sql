@@ -1,7 +1,7 @@
-DROP DATABASE IF EXISTS employeeSys;
-CREATE database employeeSys;
+DROP DATABASE IF EXISTS employeeDb;
+CREATE database employeeDb;
 
-USE employeeSys;
+USE employeeDb;
 
 CREATE TABLE department
 (
@@ -44,10 +44,10 @@ PRIMARY KEY
 PRIMARY KEY
             (id),
         FOREIGN KEY
-            (roleId,managerid) REFERENCES role
-            (id,id)
+            (roleId) REFERENCES role
+            (id)
     
 );
 
             SELECT *
-            FROM employeSys;
+            FROM employeDb;
