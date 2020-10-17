@@ -33,8 +33,40 @@ function findRoleId(ans) {
     return roleId;
 }
 
+function updateRole(){
+    let query = "SELECT * FROM EMPLOYEE";
+    connection.query(query,(err,res) => {
+        let employeeChoices = [];
+        res.forEach((emp) => {
+            employeeChoices.push(`${emp.firstName} ${emp.lastName}`)
+        })
 
+        
+        inquirer.prompt([{
+            type: "list",
+            message:"Which employee would you like to update?",
+            name: "empList",
+            choices: employeeChoices,
+        }]).then((ans) => {
+            let query = "SELECT * FROM employee WHERE employee.firstName"
+            console.log(`employee role updated.`);
+        }
+            
+        )
+    })
+}
 
+function viewEmps() {
+    let query = "SELECT employee.id, employee.firstName , employee.lastName, role.title, role.salary, department.name FROM role INNER JOIN employee ON employee.roleId = role.departmentId INNER JOIN department ON role.departmentId = department.id ORDER BY employee.id";
+    connection.query(query,(err,res) => {     
+        let employees = [];
+        res.forEach((emp,index) => {
+            employees.push([emp.id,emp.firstName,emp.lastName,emp.title,emp.salary,emp.name]) ;
+        })
+        console.table(["id","first name","last name","title","salary","department"],employees);
+          return menu();
+    });
+}
 
 function viewEmpsDept() {
     let query = "SELECT employee.id, employee.firstName , employee.lastName, role.title, role.salary, department.name FROM role INNER JOIN employee ON employee.roleId = role.departmentId INNER JOIN department ON role.departmentId = department.id ORDER BY department.id";
@@ -49,30 +81,15 @@ function viewEmpsDept() {
     
 
 
-
 function addEmps(ans) {
-    inquirer.prompt([
-        {
-            type: 'list',
-            name: 'roleChoice',
-            message: `What is the employee's role?`,
-            choices: grabRolesTitle()
-        },
-        {
-            name: 'firstName',
-            message: `What is the employee's first name?`
-        },
-        {
-            name: 'lastName',
-            message: `What is the employee's last name?`
-        }]).then((ans) => {
-            console.log(ans);
-        })
-
-
+    let roleId = findRoleId(ans.addRole);
+    let query = "INSERT INTO employee (employee.firstName,employee.lastName,employee.roleId)VALUES(?,?,?)";
+    let empItems = [ans.addEmpFirst,ans.addEmpLast,roleId];
+    connection.query(query,empItems,(err,res) => {
+        console.log("added employee");
+    })
     return menu();
 }
-
 
 const menu = ()=>{
 inquirer.prompt(

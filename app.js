@@ -21,7 +21,7 @@ var connection = mysql.createConnection({
 //   functions to view data 
 
   function viewEmps() {
-    let query = "SELECT employee.id, employee.firstName , employee.lastName, role.title, role.salary, department.name FROM role INNER JOIN employee ON employee.roleId = role.departmentId INNER JOIN department ON role.departmentId = department.id ORDER BY employee.id";
+    let query = "SELECT employee.id, employee.firstName , employee.lastName, role.title, role.salary, department.name FROM role INNER JOIN employee ON employee.roleId = role.id INNER JOIN department ON role.departmentId = department.id ORDER BY employee.id";
     connection.query(query,(err,res) => {     
         let employees = [];
         res.forEach((emp,index) => {
@@ -71,12 +71,20 @@ function addDept(ans){
 }
 
 function addRole(ans){
-    inquirer.prompt([{
+    inquirer.prompt([
+        {
         name: "addRole",
         message: "What is the role title?"
-    }]).then((res) => {
-        let query = "INSERT INTO role(title, salary, departmentId)VALUES(?)";
-        connection.query(query,[res.addDept],(err,res) => {    
+    },{
+        name: "addSalary",
+        message: "What is the salary for this role?"
+    },{
+        name: "addDept",
+        message: "What is the Department ID?"
+    }
+]).then((res) => {
+        let query = "INSERT INTO role(title, salary, departmentId)VALUES(?,?,?)";
+        connection.query(query,[res.addRole,res.addSalary,res.addDept],(err,res) => {    
         })
         return menu ();
     })
@@ -87,10 +95,9 @@ function addRole(ans){
 function addEmps(ans) {
     inquirer.prompt([
         {
-            type: 'list',
+          
             name: 'roleChoice',
-            message: `What is the employee's role?`,
-            choices: grabRolesTitle()
+            message: `What is the employee's role Id?`
         },
         {
             name: 'firstName',
@@ -99,12 +106,57 @@ function addEmps(ans) {
         {
             name: 'lastName',
             message: `What is the employee's last name?`
-        }]).then((ans) => {
-            console.log(ans);
+        }]).then((res) => {
+            let query = "INSERT INTO employee(firstName, lastName, roleId)VALUES(?,?,?)";
+            connection.query(query,[res.firstName,res.lastName,res.roleChoice],(err,res) => {    
+        })
+            return menu ();
         })
     }
 // function to update role 
 
+function updateRole() {
+    let query = "SELECT * FROM employee";
+    connection.query(query,(err,res) => {
+        let employeeChoices = [];
+        let employees = [];
+        res.forEach((emp) => {
+            employees.push({id: emp.roleId, firstName: emp.firstName, lastName: emp.lastName, fullName: `${emp.firstName} ${emp.lastName}`});
+            employeeChoices.push(`${emp.firstName} ${emp.lastName}`);
+        })
+
+        inquirer.prompt([{
+            type: "list",
+            message:"Which employee would you like to update?",
+            name: "empList",
+            choices: employeeChoices,
+        },
+        {
+            name: "newId",
+            message: "What is the employee's new role Id?"
+        }
+]).then((ans) => {
+            
+            let firstName = '';
+            let id = '';
+            employees.forEach((a) => {
+                if (a.fullName === ans.empList) {
+                    firstName = a.firstName;
+                    id = ans.newId;
+                }
+            })
+            let query = "UPDATE employee SET roleId = ? WHERE firstName = ?";
+            console.log(id);
+            console.log(firstName);
+            connection.query(query,[id, firstName],(err,res) => {   
+                
+            })
+            return menu();   
+        }
+        
+        )
+    })
+}
 // Starts App 
 const menu = () => {
     inquirer.prompt([
@@ -116,7 +168,6 @@ const menu = () => {
         }
 ]).then((ans) => {
     if(ans.menu === "View Employees"){
-
         viewEmps();
     } else if (ans.menu === "View Departments"){
 
@@ -126,6 +177,12 @@ const menu = () => {
         viewRole();
     } else if (ans.menu === "Add Department"){
         addDept(ans);
+    } else if (ans.menu === "Add Role"){
+        addRole(ans);
+    } else if (ans.menu === "Add Employee"){
+        addEmps(ans);
+    } else if (ans.menu === "Update Employee Role"){
+        updateRole();
     }
 }
 
