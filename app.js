@@ -69,51 +69,90 @@ function addDept(ans){
         return menu ();
     })
 }
-
+//  add roles 
 function addRole(ans){
-    inquirer.prompt([
-        {
-        name: "addRole",
-        message: "What is the role title?"
-    },{
-        name: "addSalary",
-        message: "What is the salary for this role?"
-    },{
-        name: "addDept",
-        message: "What is the Department ID?"
-    }
-]).then((res) => {
-        let query = "INSERT INTO role(title, salary, departmentId)VALUES(?,?,?)";
-        connection.query(query,[res.addRole,res.addSalary,res.addDept],(err,res) => {    
+    let query = 'SELECT * FROM department';
+    connection.query(query, (err,res) => {
+        let deptChoices = [];
+        let dept = [];
+        res.forEach((dep) => {
+            dept.push({id: dep.id, dept:dep.name});
+            deptChoices.push(`${dep.name}`);
         })
-        return menu ();
+        inquirer.prompt([
+            {
+            name: "addRole",
+            message: "What is the role title?"
+        },{
+            name: "addSalary",
+            message: "What is the salary for this role?"
+        },{
+            type: "list",
+            name: "addDept",
+            message: "What is the Department ID?",
+            choices: deptChoices
+        }
+    ]).then((res) => {
+            let id = '';
+            dept.forEach((a) => {
+                if (a.name === ans.addDept) {
+                    id = a.id;
+                }
+            })
+            let query = "INSERT INTO role(title, salary, departmentId)VALUES(?,?,?)";
+            connection.query(query,[res.addRole,res.addSalary, id],(err,res) => {    
+            })
+            return menu ();
+        })
     })
+
 }
 
 
-
+//  add employees 
 function addEmps(ans) {
-    inquirer.prompt([
-        {
-          
-            name: 'roleChoice',
-            message: `What is the employee's role Id?`
-        },
-        {
-            name: 'firstName',
-            message: `What is the employee's first name?`
-        },
-        {
-            name: 'lastName',
-            message: `What is the employee's last name?`
-        }]).then((res) => {
-            let query = "INSERT INTO employee(firstName, lastName, roleId)VALUES(?,?,?)";
-            connection.query(query,[res.firstName,res.lastName,res.roleChoice],(err,res) => {    
+
+    let query = "SELECT * FROM role";
+    connection.query(query,(err,res) => {
+        let roleChoices = [];
+        let roles = [];
+        res.forEach((role) => {
+            roles.push({id: role.departmentId, role:role.title});
+            roleChoices.push(`${role.title}`);
         })
-            return menu ();
-        })
+       
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'roleChoice',
+                message: `What is the employee's role?`,
+                choices: roleChoices
+            },
+            {
+                name: 'firstName',
+                message: `What is the employee's first name?`
+            },
+            {
+                name: 'lastName',
+                message: `What is the employee's last name?`
+            }]).then((ans) => {
+               
+                let id = '';
+                roles.forEach((a) => {
+                    if (a.role === ans.roleChoice) {
+                        id = a.id;
+                    }
+                })
+
+                let query = "INSERT INTO employee(firstName, lastName, roleId)VALUES(?,?,?)";
+                connection.query(query,[ans.firstName,ans.lastName,id],(err,res) => {    
+            })
+                return menu ();
+            })
+    })
+
     }
-// function to update role 
+//  update role 
 
 function updateRole() {
     let query = "SELECT * FROM employee";
